@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import './App.css';
-import logo from './assets/logo.svg';
+import logo from './assets/logo.png';
 import { usePrintQueueWS } from './hooks/usePrintQueueWS';
 import { QueueList } from './components/QueueList/QueueList';
 import { SystemStatus } from './components/SystemStatus/SystemStatus';
