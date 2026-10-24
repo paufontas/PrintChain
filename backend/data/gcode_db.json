@@ -1,0 +1,12 @@
+{
+  "4-1_gearbox.gcode": {
+    "name": "4-1 Gearbox (Ring Gear)",
+    "duration_seconds": 20,
+    "image_url": "http://localhost:8000/images/4-1_gearbox.png"
+  },
+  "SO-101_upper_arm.gcode": {
+    "name": "SO-101 Upper Arm",
+    "duration_seconds": 15,
+    "image_url": "http://localhost:8000/images/SO-101_upper_arm.png"
+  }
+}
