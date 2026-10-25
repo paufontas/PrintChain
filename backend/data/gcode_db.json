@@ -8,5 +8,10 @@
     "name": "SO-101 Upper Arm",
     "duration_seconds": 15,
     "image_url": "http://localhost:8000/images/SO-101_upper_arm.png"
+  },
+  "gearbox_and_upper_arm.gcode": {
+    "name": "4-1 Gearbox (Ring Gear) + SO-101 Upper Arm",
+    "duration_seconds": 23,
+    "image_url": "http://localhost:8000/images/gearbox_and_upper_arm.png"
   }
 }

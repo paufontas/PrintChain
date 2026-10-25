@@ -14,6 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# MODIFIED VERSION
+
+import sys
+import termios
+import tty
 import logging
 import threading
 from collections.abc import Callable
@@ -94,6 +99,8 @@ def rollout(cfg: RolloutConfig):
         # propagate through the parent event.
         shutdown_event = LinkedEvent(shutdown_event)
 
+    start_keyboard_listener(shutdown_event)
+
     logger.info("Building rollout context...")
     ctx = build_rollout_context(cfg, shutdown_event)
 
@@ -129,6 +136,33 @@ def rollout(cfg: RolloutConfig):
         raise SystemExit(1)
     logger.info("Rollout finished")
 
+def start_keyboard_listener(shutdown_event: threading.Event):
+    def listen():
+        try:
+            if not sys.stdin.isatty():
+                return
+
+            fd = sys.stdin.fileno()
+            old_settings = termios.tcgetattr(fd)
+            tty.setcbreak(fd)
+            print("\n>>> [CONTROL] Press 'q' or 'space' on terminal to stop the robot before timeout <<<\n")
+
+            while not shutdown_event.is_set():
+                ch = sys.stdin.read(1)
+                if ch in ['q', 'Q', ' ', '\x1b']:
+                    print("\n[CONTROL] Key detected! Stopping LeRobot...")
+                    shutdown_event.set()
+                    break
+        except Exception:
+            pass
+        finally:
+            try:
+                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+            except Exception:
+                pass
+
+    t = threading.Thread(target=listen, daemon=True)
+    t.start()
 
 def main() -> None:
     """CLI entry point for ``lerobot-rollout``."""
