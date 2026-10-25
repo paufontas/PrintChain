@@ -2,11 +2,23 @@ import os
 import asyncio
 import json
 import time
+import subprocess
 from typing import List
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Environment variables
+load_dotenv()
+
+CONDA_PYTHON = Path(os.getenv("CONDA_PYTHON"))
+ROBOT_SCRIPT_PATH = Path(os.getenv("ROBOT_SCRIPT_PATH"))
+
+if not CONDA_PYTHON or not ROBOT_SCRIPT_PATH:
+    raise ValueError("Environment variables missing. Check .env.example")
 
 # Path to metadata JSON inside the 'data' directory
 DB_FILE_PATH = os.path.join(os.path.dirname(__file__), "data", "gcode_db.json")
@@ -92,10 +104,31 @@ class PrintManager:
 manager = PrintManager()
 
 def run_robot_script():
-    """Simulates physical execution script for the robotic arm (for now)"""
-    print("ROBOT:    Starting part removal procedure...")
-    time.sleep(8) # Simulation delay for robotic arm operation
-    print("ROBOT:    Part successfully removed! Ready for next job.")
+    """executa el rollout físic del SO-101 amb la política ACT i s'atura per timeout"""
+    print("ROBOT: Starting part removal procedure with LeRobot SO-101...")
+
+    cmd = [
+        CONDA_PYTHON,
+        ROBOT_SCRIPT_PATH,
+        "--strategy.type=base",
+        "--robot.type=so101_follower",
+        "--robot.port=/dev/ttyACM1",
+        "--robot.id=follower_hackathon",
+        '--robot.cameras={"cam_top": {"type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 30, "fourcc": "MJPG"}, "cam_wrist": {"type": "opencv", "index_or_path": 4, "width": 640, "height": 480, "fps": 30, "fourcc": "MJPG"}}',
+        "--policy.path=aegrabs/act_so101_clear_plate",
+        "--policy.device=cuda",
+        "--task=clear plate",
+        "--display_data=true",
+        "--duration=90",
+    ]
+
+    try:
+        subprocess.run(cmd, check=True)
+        print("ROBOT: Part successfully removed! Ready for next job.")
+    except subprocess.CalledProcessError as e:
+        print(f"ROBOT ERROR: el procés ha fallat amb codi {e.returncode}")
+    except Exception as e:
+        print(f"ROBOT ERROR: {e}")
 
 async def print_queue_worker():
     while True:
